@@ -1,9 +1,70 @@
-<Main>
+<Directions>
+    canvas:
+        Color:
+            rgba: 21/255, 20/255, 25/255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
-    MDBoxLayout:
+    BoxLayout:
         orientation: "vertical"
+        spacing: dp(30)
 
         MDLabel:
+            text: "Choose a Line"
+            font_style: "H4"
+            color: "lightgrey"
             halign: "center"
-            bold: True
-            text: "hi"
+
+        MDRoundFlatButton:
+            text: "M1-M2"
+            font_style: "H6"
+            text_color: "lightgrey"
+            size_hint: (0.5, 0.3)
+            line_color: [0.8, 0.8, 0.8, 1]
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+        MDRoundFlatButton:
+            text: "M3"
+            font_style: "H6"
+            size_hint: (0.5, 0.3)
+            text_color: "lightgrey"
+            line_color: [0.8, 0.8, 0.8, 1]
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            on_press: app.direction_to("left"); app.root.current = "m3"
+
+        Widget:
+
+<Content>
+    size_hint: 1, None
+    orientation: "vertical"
+
+    Button:
+        text: "button"
+
+<M3>
+    canvas:
+        Color:
+            rgba: 21/255, 20/255, 25/255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+
+        Widget:
+
+        BoxLayout:
+            id: directions
+            padding: 20, 0, 0, 0
+            size_hint_y: None
+            height: self.minimum_height
+
+        Widget:
+
+    MDIconButton:
+        icon: "arrow-left"
+        icon_size: "35sp"
+        theme_text_color: "Custom"
+        text_color: "lightgrey"
+        on_press: app.direction_to("right"); app.root.current = 'main'; root.reset()
