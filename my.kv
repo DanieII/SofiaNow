@@ -1,4 +1,4 @@
-<Directions>
+<Home>
     canvas:
         Color:
             rgba: 21/255, 20/255, 25/255, 1
@@ -6,33 +6,44 @@
             pos: self.pos
             size: self.size
 
-    BoxLayout:
-        orientation: "vertical"
-        spacing: dp(30)
+    GridLayout:
+        rows: 2
 
         MDLabel:
             text: "Choose a Line"
-            font_style: "H4"
+            font_style: "H3"
             color: "lightgrey"
             halign: "center"
 
-        MDRoundFlatButton:
-            text: "M1-M2"
-            font_style: "H6"
-            text_color: "lightgrey"
-            size_hint: (0.5, 0.3)
-            line_color: [0.8, 0.8, 0.8, 1]
-            pos_hint: {"center_x": 0.5, "center_y": 0.5}
-        MDRoundFlatButton:
-            text: "M3"
-            font_style: "H6"
-            size_hint: (0.5, 0.3)
-            text_color: "lightgrey"
-            line_color: [0.8, 0.8, 0.8, 1]
-            pos_hint: {"center_x": 0.5, "center_y": 0.5}
-            on_press: app.direction_to("left"); app.root.current = "m3"
+        BoxLayout:
+            orientation: "vertical"
+            spacing: 20
+            padding: 0, dp(-40), 0, dp(210)
+            MDRoundFlatButton:
+                text: "M1-M2"
+                font_style: "H6"
+                text_color: "lightgrey"
+                size_hint: (0.5, 0.2)
+                line_color: [0.8, 0.8, 0.8, 1]
+                pos_hint: {"center_x": 0.5}
+                on_release: app.change_transition_direction("left"); app.root.current = "m1-m2"
+            MDRoundFlatButton:
+                text: "M3"
+                font_style: "H6"
+                size_hint: (0.5, 0.2)
+                text_color: "lightgrey"
+                line_color: [0.8, 0.8, 0.8, 1]
+                pos_hint: {"center_x": 0.5}
+                on_release: app.change_transition_direction("left"); app.root.current = "m3"
 
-        Widget:
+
+<DirectionInformation>
+    canvas:
+        Color:
+            rgba: 204/255, 204/255, 204/255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
 
 <Content>
     size_hint: 1, None
@@ -41,7 +52,7 @@
     Button:
         text: "button"
 
-<M3>
+<Line>
     canvas:
         Color:
             rgba: 21/255, 20/255, 25/255, 1
@@ -49,22 +60,21 @@
             pos: self.pos
             size: self.size
 
-    BoxLayout:
-        orientation: "vertical"
-
-        Widget:
-
-        BoxLayout:
-            id: directions
-            padding: 20, 0, 0, 0
-            size_hint_y: None
-            height: self.minimum_height
-
-        Widget:
+    FloatLayout:
+        ScrollView:
+            do_scroll_x: False
+            size_hint: (0.6, 0.7)
+            pos_hint: {"center_x": 0.5, "center_y": 0.5}
+            GridLayout:
+                id: directions
+                size_hint: None, None
+                size: root.width, root.height
+                cols: 1
+                spacing: 0, 10
 
     MDIconButton:
         icon: "arrow-left"
         icon_size: "35sp"
         theme_text_color: "Custom"
         text_color: "lightgrey"
-        on_press: app.direction_to("right"); app.root.current = 'main'; root.reset()
+        on_press: app.change_transition_direction("right"); app.root.current = 'home'; root.reset()
