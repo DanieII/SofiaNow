@@ -1,18 +1,19 @@
 import requests
 from bs4 import BeautifulSoup
 import re
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import json
+from datetime import datetime
 
-
-def get_line_soup(line):
-    html = requests.get(f"https://schedules.sofiatraffic.bg/metro/{line}")
-    soup = BeautifulSoup(html.content, "html.parser")
-    return soup
+all_stations = json.loads(requests.get("https://routes.sofiatraffic.bg/resources/stops-bg.json").text)
+subway_stations = list(filter(lambda x: "метро" in x["n"].lower(), all_stations))
+direction_ids_for_server = {
+    "M1-M2": "8451",
+    "M3": "10757"
+}
 
 
 def get_directions(line):
-    soup = get_line_soup(line)
+    soup = BeautifulSoup(requests.get(f"https://schedules.sofiatraffic.bg/metro/{line}").content, "html.parser")
     directions_information = soup.find("ul", {"class": "schedule_view_direction_tabs"}).find_all("li")
     directions = {}
     link_pattern = r"(.*)\/([0-9]+)"
@@ -25,104 +26,24 @@ def get_directions(line):
     return directions
 
 
-def get_stations(line):
-    soup = get_line_soup(line)
-    stations_information = soup.find("div", {"class": "schedule_direction_sign_wrapper"}).find("ul").find_all("li")
+def get_stations_with_times(line, direction):
     stations = {}
-
-    for i in stations_information:
-        station_id, *station_name = i.text.split()
-        stations[" ".join(station_name)] = station_id
-
-    return stations
-
-
-def test(direction, station, line):
-    result = BeautifulSoup(
-        requests.get(f"https://schedules.sofiatraffic.bg/metro/{line}#sign/{direction}/{station}").content,
-        "html.parser"
-    )
-    print(result.find("span", {"id": "schedule_10757_direction_4424_current_sign_name"}))
-    times_information = result.find("div", {"class": "schedule_times"}).find("tbody").find_all("td")
-    times = {}
-
-    for time in times_information:
-        times[time["data-cell"]] = time.text.split()
-
-    return times
+    # used = [{'y': 42.70209, 'n': 'МЕТРОСТАНЦИЯ ХАДЖИ ДИМИТЪР', 'm': 1, 'x': 23.351575, 'c': '3309'}, {'y': 42.697181, 'n': 'МЕТРОСТАНЦИЯ ТЕАТРАЛНА', 'm': 1, 'x': 23.346866, 'c': '3311'}, {'y': 42.69055, 'n': 'МЕТРОСТАНЦИЯ ОРЛОВ МОСТ', 'm': 1, 'x': 23.33622, 'c': '3315'}, {'y': 42.688237, 'n': 'МЕТРОСТАНЦИЯ СВ. ПАТРИАРХ ЕВТИМИЙ', 'm': 1, 'x': 23.327664, 'c': '3317'}, {'y': 42.689121, 'n': 'МЕТРОСТАНЦИЯ НДК 2', 'm': 1, 'x': 23.318026, 'c': '3319'}, {'y': 42.686537, 'n': 'МЕТРОСТАНЦИЯ МЕДИЦИНСКИ УНИВЕРСИТЕТ', 'm': 1, 'x': 23.30932, 'c': '3321'}, {'y': 42.679241, 'n': 'МЕТРОСТАНЦИЯ БУЛ. БЪЛГАРИЯ', 'm': 1, 'x': 23.300988, 'c': '3323'}, {'y': 42.679228, 'n': 'МЕТРОСТАНЦИЯ ЦАР БОРИС III / КРАСНО СЕЛО', 'm': 1, 'x': 23.284366, 'c': '3327'}, {'y': 42.682777, 'n': 'МЕТРОСТАНЦИЯ ОВЧА КУПЕЛ', 'm': 1, 'x': 23.270943, 'c': '3329'}, {'y': 42.683968, 'n': 'МЕТРОСТАНЦИЯ МИЗИЯ / НБУ', 'm': 1, 'x': 23.257033, 'c': '3331'}, {'y': 42.684747, 'n': 'МЕТРОСТАНЦИЯ ОВЧА КУПЕЛ II', 'm': 1, 'x': 23.247822, 'c': '3333'}, {'y': 42.684117, 'n': 'МЕТРОСТАНЦИЯ ГОРНА БАНЯ', 'm': 1, 'x': 23.242672, 'c': '3335'}]
+    # subway_stations[60:]
+    for s in subway_stations[60:]:
+        res = requests.get(
+            f"https://schedules.sofiatraffic.bg/server/html/schedule_load/{direction_ids_for_server[line]}/{direction}/{s['c']}")
+        soup = BeautifulSoup(res.content, "html.parser")
+        if soup.text:
+            all_arrivals = soup.find("div", {"class": "schedule_times"}).find_all("td")
+            current_hour = str(datetime.now().hour)
+            current_cell = next(filter(lambda x: x["data-cell"] == current_hour, all_arrivals))
+            next_cell = current_cell.next_sibling.next_sibling
+            stations[s["n"]] = {
+                current_cell["data-cell"]: [t.text for t in current_cell.find_all("a")],
+                next_cell["data-cell"]: [t.text for t in next_cell.find_all("a")]
+            }
+    print(stations)
 
 
-def get_station_schedule(direction, station, line):
-    global driver
-    if not driver:
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('--headless')
-        driver = webdriver.Chrome(options=chrome_options)
-    url = f"https://schedules.sofiatraffic.bg/metro/{line}#sign/{direction}/{station}"
-    driver.get(url)
-    element = driver.find_element(By.CLASS_NAME, "schedule_times").find_element(By.TAG_NAME, "tbody")
-    div_element = driver.find_element(By.CLASS_NAME, "schedule_times")
-    tbody_element = div_element.find_elements(By.TAG_NAME, "td")
-    [print(x.text.strip()) for x in tbody_element]
-    print("\n" * 10)
-    driver.refresh()
-
-
-def close_driver():
-    global driver
-    driver.close()
-    driver = None
-
-
-class WebDriver:
-
-    def __init__(self):
-        self.driver: webdriver.Chrome = None
-        self.options = webdriver.ChromeOptions()
-        self.options.add_argument('--headless')
-        self.url = "https://schedules.sofiatraffic.bg/metro/"
-
-    @staticmethod
-    def merge_link(base, *args):
-        line, *rest = args
-        fragment = ""
-        if rest:
-            fragment = "#direction/" + "/".join(rest)
-        return base + line + fragment
-
-    @staticmethod
-    def get_soup(url):
-        html = requests.get(url)
-        soup = BeautifulSoup(html.content, "html.parser")
-        return soup
-
-    def get_directions(self, line):
-        soup = self.get_soup(self.merge_link(self.url, line))
-        directions_information = soup.find("ul", {"class": "schedule_view_direction_tabs"}).find_all("li")
-        directions = {}
-        link_pattern = r"(.*)\/([0-9]+)"
-
-        for information in directions_information:
-            current_direction = information.find("a")
-            direction_id = re.match(link_pattern, current_direction["href"]).group(2)
-            directions[current_direction.find("span").text] = direction_id
-
-        return directions
-
-    def get_stations(self, line, direction):
-        self.driver = webdriver.Chrome(options=self.options)
-        url = self.merge_link(self.url, line, direction)
-        self.driver.get(url)
-        stations_information = self.driver.find_element(By.CLASS_NAME, "schedule_direction_sign_wrapper").find_elements(
-            By.TAG_NAME, "li")
-        pattern = r"(.*)#([0-9]+)"
-        stations = {}
-
-        for station in stations_information:
-            station_id = re.match(pattern,
-                                  station.find_element(By.CLASS_NAME, "stop_link").get_attribute("href")).group(2)
-            station_name = station.find_element(By.CLASS_NAME, "stop_change").get_attribute("text")
-            stations[station_name] = station_id
-
-        self.driver.close()
-        return stations
+get_stations_with_times("M3", "4425")

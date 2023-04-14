@@ -20,7 +20,8 @@ class Content(BoxLayout):
         self.get_closest_arrivals()
 
     def get_closest_arrivals(self):
-        schedule = subway_info.get_station_schedule(self.direction, self.station, self.line)
+        pass
+        # schedule = subway_info.get_station_schedule(self.direction, self.station, self.line)
 
 
 class DirectionInformation(ModalView):
@@ -71,8 +72,7 @@ class Line(Screen):
             button = MDRaisedButton(text=d, font_style="Button", md_bg_color=[.8, .8, .8, 1],
                                     text_color=[.08, .07, .09, 1],
                                     padding=(20, 20),
-                                    on_release=lambda x, direction=d: self.get_current_direction_modal_view(direction,
-                                                                                                            directions))
+                                    on_release=lambda x, direction=directions[d]: self.get_current_direction_modal_view(direction)
             self.ids.directions.add_widget(button)
 
     def reset(self):
@@ -81,6 +81,6 @@ class Line(Screen):
     def get_departing_times(self):
         pass
 
-    def get_current_direction_modal_view(self, direction, directions):
-        view = DirectionInformation(self.line, directions[direction], datetime.now().hour)
+    def get_current_direction_modal_view(self, direction):
+        view = DirectionInformation(self.line, direction, datetime.now().hour)
         view.open()
