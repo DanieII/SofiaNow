@@ -6,10 +6,17 @@ from datetime import datetime
 
 all_stations = json.loads(requests.get("https://routes.sofiatraffic.bg/resources/stops-bg.json").text)
 subway_stations = list(filter(lambda x: "метро" in x["n"].lower(), all_stations))
-direction_ids_for_server = {
-    "M1-M2": "8451",
-    "M3": "10757"
-}
+even_day = (datetime.today().weekday() + 1) % 2 == 0
+if even_day:
+    direction_ids_for_server = {
+        "M1-M2": "11349",
+        "M3": "10758"
+    }
+else:
+    direction_ids_for_server = {
+        "M1-M2": "8451",
+        "M3": "10757"
+    }
 
 
 def get_directions(line):
@@ -26,24 +33,52 @@ def get_directions(line):
     return directions
 
 
-def get_stations_with_times(line, direction):
+def get_stations_with_arrivals(line, direction):
     stations = {}
-    # used = [{'y': 42.70209, 'n': 'МЕТРОСТАНЦИЯ ХАДЖИ ДИМИТЪР', 'm': 1, 'x': 23.351575, 'c': '3309'}, {'y': 42.697181, 'n': 'МЕТРОСТАНЦИЯ ТЕАТРАЛНА', 'm': 1, 'x': 23.346866, 'c': '3311'}, {'y': 42.69055, 'n': 'МЕТРОСТАНЦИЯ ОРЛОВ МОСТ', 'm': 1, 'x': 23.33622, 'c': '3315'}, {'y': 42.688237, 'n': 'МЕТРОСТАНЦИЯ СВ. ПАТРИАРХ ЕВТИМИЙ', 'm': 1, 'x': 23.327664, 'c': '3317'}, {'y': 42.689121, 'n': 'МЕТРОСТАНЦИЯ НДК 2', 'm': 1, 'x': 23.318026, 'c': '3319'}, {'y': 42.686537, 'n': 'МЕТРОСТАНЦИЯ МЕДИЦИНСКИ УНИВЕРСИТЕТ', 'm': 1, 'x': 23.30932, 'c': '3321'}, {'y': 42.679241, 'n': 'МЕТРОСТАНЦИЯ БУЛ. БЪЛГАРИЯ', 'm': 1, 'x': 23.300988, 'c': '3323'}, {'y': 42.679228, 'n': 'МЕТРОСТАНЦИЯ ЦАР БОРИС III / КРАСНО СЕЛО', 'm': 1, 'x': 23.284366, 'c': '3327'}, {'y': 42.682777, 'n': 'МЕТРОСТАНЦИЯ ОВЧА КУПЕЛ', 'm': 1, 'x': 23.270943, 'c': '3329'}, {'y': 42.683968, 'n': 'МЕТРОСТАНЦИЯ МИЗИЯ / НБУ', 'm': 1, 'x': 23.257033, 'c': '3331'}, {'y': 42.684747, 'n': 'МЕТРОСТАНЦИЯ ОВЧА КУПЕЛ II', 'm': 1, 'x': 23.247822, 'c': '3333'}, {'y': 42.684117, 'n': 'МЕТРОСТАНЦИЯ ГОРНА БАНЯ', 'm': 1, 'x': 23.242672, 'c': '3335'}]
-    # subway_stations[60:]
-    for s in subway_stations[60:]:
+
+    if line == "M1-M2":
+        if direction == "2666" or direction == "2668":
+            line_range = range(77, 147, 2)
+        elif direction == "2667" or direction == "2669":
+            line_range = range(78, 147, 2)
+
+    elif line == "M3":
+        if direction == "4424":
+            line_range = range(148, 171, 2)
+        elif direction == "4425":
+            line_range = range(147, 171, 2)
+
+    current_subway_stations = []
+    for station in subway_stations:
+        if subway_stations.index(station) in line_range:
+            current_subway_stations.append(station)
+
+    for s in current_subway_stations:
         res = requests.get(
             f"https://schedules.sofiatraffic.bg/server/html/schedule_load/{direction_ids_for_server[line]}/{direction}/{s['c']}")
-        soup = BeautifulSoup(res.content, "html.parser")
-        if soup.text:
+        if res.content:
+            soup = BeautifulSoup(res.content, "html.parser")
+
             all_arrivals = soup.find("div", {"class": "schedule_times"}).find_all("td")
             current_hour = str(datetime.now().hour)
+
             current_cell = next(filter(lambda x: x["data-cell"] == current_hour, all_arrivals))
+            current_cell_hour = current_cell["data-cell"] if current_cell else f"No arrivals for {current_hour}"
+            if current_cell:
+                current_cell_arrivals = [t.text for t in current_cell.find_all("a")]
+            else:
+                current_cell_arrivals = []
+
             next_cell = current_cell.next_sibling.next_sibling
+            next_cell_hour = next_cell["data-cell"] if next_cell else f"No arrivals for {int(current_hour) + 1}"
+            if next_cell:
+                next_cell_arrivals = [t.text for t in next_cell.find_all("a")]
+            else:
+                next_cell_arrivals = []
+
             stations[s["n"]] = {
-                current_cell["data-cell"]: [t.text for t in current_cell.find_all("a")],
-                next_cell["data-cell"]: [t.text for t in next_cell.find_all("a")]
+                current_cell_hour: current_cell_arrivals,
+                next_cell_hour: next_cell_arrivals
             }
-    print(stations)
 
-
-get_stations_with_times("M3", "4425")
+    return stations

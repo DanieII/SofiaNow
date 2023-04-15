@@ -10,7 +10,7 @@
         rows: 2
 
         MDLabel:
-            text: "Choose a Line"
+            text: "Изберете линия"
             font_style: "H3"
             color: "lightgrey"
             halign: "center"
@@ -46,11 +46,19 @@
             size: self.size
 
 <Content>
-    size_hint: 1, None
-    orientation: "vertical"
+    rows: 2
+    cols: 2
+    size_hint: 0.5, None
+    height: self.minimum_height
 
-    Button:
-        text: "button"
+
+    MDList:
+        id: list1
+    MDList:
+        id: list2
+
+
+
 
 <Line>
     canvas:
