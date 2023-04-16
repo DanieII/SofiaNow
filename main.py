@@ -1,8 +1,6 @@
-from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.app import MDApp
-
 from line_screen import Line
 
 
@@ -13,7 +11,7 @@ class Home(Screen):
 class MyApp(MDApp):
 
     def build(self):
-        Window.size = (540, 800)
+        self.title = "SofiaNow"
         Builder.load_file("my.kv")
         self.screens = [Home(name="home"), Line("M3", name="m3"), Line("M1-M2", name="m1-m2")]
         self.screen_manager = ScreenManager()

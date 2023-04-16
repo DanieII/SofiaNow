@@ -1,11 +1,14 @@
+import threading
+import kivy._clock
+from kivy.clock import Clock
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.modalview import ModalView
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from kivymd.uix.button import MDRaisedButton
 from kivymd.uix.expansionpanel import MDExpansionPanel, MDExpansionPanelOneLine
+from kivymd.uix.label import MDLabel
 from kivymd.uix.list import OneLineListItem
-
 import subway_info
 from datetime import datetime
 
@@ -17,11 +20,11 @@ class Content(GridLayout):
         self.station, self.arrivals = args
         for i, v in enumerate(self.arrivals.items(), 1):
             hour, arrivals = v
+            current_list = self.ids.list1 if i == 1 else self.ids.list2
+            current_list.add_widget(MDLabel(text=f"{hour}\n", halign='center'))
             for arrival in arrivals:
-                if i == 1:
-                    self.ids.list1.add_widget(OneLineListItem(text=arrival))
-                elif i == 2:
-                    self.ids.list2.add_widget(OneLineListItem(text=arrival))
+                current_list.add_widget(
+                    OneLineListItem(text=f"{' ' * (self.width // 2 - (len(arrival) * 3))}{arrival}"))
 
 
 class DirectionInformation(ModalView):
@@ -30,13 +33,31 @@ class DirectionInformation(ModalView):
         super().__init__()
         self.size_hint = (.85, .85)
         self.current_hour = current_hour
-        self.stations_with_times: dict = subway_info.get_stations_with_arrivals(line, direction)
+        self.loading = True
         self.line = line
         self.direction = direction
-        self.create_expansion_panels_for_each_station()
+
+    def on_open(self):
+        self.start()
+        Clock.schedule_interval(self.check_loading, 0.1)
+
+    def start(self):
+        self.thread = threading.Thread(target=self.load)
+        self.thread.start()
+
+    def load(self):
+        result = subway_info.get_stations_with_arrivals(self.line, self.direction)
+        self.stations_with_times = result
+        self.loading = False
+
+    def check_loading(self, *args):
+        if not self.loading:
+            self.create_expansion_panels_for_each_station()
+            self.ids.spinner.active = False
+            return False
 
     def create_expansion_panels_for_each_station(self):
-        stations_grid = GridLayout(cols=1, spacing=(0, 10), size_hint_y=None, size_hint_x=None, width=1000)
+        stations_grid = GridLayout(cols=1, spacing=(0, 15), size_hint_y=None, size_hint_x=None, width=1000)
 
         for station, arrivals in self.stations_with_times.items():
             panel = MDExpansionPanel(panel_cls=MDExpansionPanelOneLine(text=station), icon="subway",

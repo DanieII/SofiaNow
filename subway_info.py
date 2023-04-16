@@ -1,21 +1,27 @@
+from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 import re
 import json
-from datetime import datetime
 
 all_stations = json.loads(requests.get("https://routes.sofiatraffic.bg/resources/stops-bg.json").text)
 subway_stations = list(filter(lambda x: "метро" in x["n"].lower(), all_stations))
-even_day = (datetime.today().weekday() + 1) % 2 == 0
-if even_day:
-    direction_ids_for_server = {
-        "M1-M2": "11349",
-        "M3": "10758"
-    }
-else:
+soup = BeautifulSoup(requests.get("https://schedules.sofiatraffic.bg/metro/M1-M2").content, "html.parser")
+active_list = soup.find("ul", {"class": "schedule_active_list_tabs"}).find_all("li")
+delnik = False
+for i, option in enumerate(active_list, 1):
+    if "schedule_active_list_active_tab" in option.find("a")["class"]:
+        if i == 1:
+            delnik = True
+if delnik:
     direction_ids_for_server = {
         "M1-M2": "8451",
         "M3": "10757"
+    }
+else:
+    direction_ids_for_server = {
+        "M1-M2": "11349",
+        "M3": "10758"
     }
 
 
@@ -53,8 +59,9 @@ def get_stations_with_arrivals(line, direction):
         if subway_stations.index(station) in line_range:
             current_subway_stations.append(station)
 
+    session = requests.Session()
     for s in current_subway_stations:
-        res = requests.get(
+        res = session.get(
             f"https://schedules.sofiatraffic.bg/server/html/schedule_load/{direction_ids_for_server[line]}/{direction}/{s['c']}")
         if res.content:
             soup = BeautifulSoup(res.content, "html.parser")
@@ -63,17 +70,19 @@ def get_stations_with_arrivals(line, direction):
             current_hour = str(datetime.now().hour)
 
             current_cell = next(filter(lambda x: x["data-cell"] == current_hour, all_arrivals))
-            current_cell_hour = current_cell["data-cell"] if current_cell else f"No arrivals for {current_hour}"
-            if current_cell:
+            if current_cell.find("a"):
+                current_cell_hour = current_cell["data-cell"]
                 current_cell_arrivals = [t.text for t in current_cell.find_all("a")]
             else:
+                current_cell_hour = f"Няма курсове за {current_hour}"
                 current_cell_arrivals = []
 
             next_cell = current_cell.next_sibling.next_sibling
-            next_cell_hour = next_cell["data-cell"] if next_cell else f"No arrivals for {int(current_hour) + 1}"
-            if next_cell:
+            if next_cell.find("a"):
+                next_cell_hour = next_cell["data-cell"]
                 next_cell_arrivals = [t.text for t in next_cell.find_all("a")]
             else:
+                next_cell_hour = f"Няма курсове за {int(current_hour) + 1}"
                 next_cell_arrivals = []
 
             stations[s["n"]] = {
