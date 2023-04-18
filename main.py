@@ -1,3 +1,4 @@
+from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.app import MDApp

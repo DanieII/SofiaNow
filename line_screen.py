@@ -1,6 +1,6 @@
 import threading
-import kivy._clock
 from kivy.clock import Clock
+from kivy.metrics import dp
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.modalview import ModalView
 from kivy.uix.screenmanager import Screen
@@ -23,8 +23,9 @@ class Content(GridLayout):
             current_list = self.ids.list1 if i == 1 else self.ids.list2
             current_list.add_widget(MDLabel(text=f"{hour}\n", halign='center'))
             for arrival in arrivals:
+                r = current_list.width // 4
                 current_list.add_widget(
-                    OneLineListItem(text=f"{' ' * (self.width // 2 - (len(arrival) * 3))}{arrival}"))
+                    OneLineListItem(text=f"{' ' * r}{arrival}"))
 
 
 class DirectionInformation(ModalView):
@@ -57,7 +58,7 @@ class DirectionInformation(ModalView):
             return False
 
     def create_expansion_panels_for_each_station(self):
-        stations_grid = GridLayout(cols=1, spacing=(0, 15), size_hint_y=None, size_hint_x=None, width=1000)
+        stations_grid = GridLayout(cols=1, spacing=(0, dp(15)), size_hint=(None, None), width=self.width)
 
         for station, arrivals in self.stations_with_times.items():
             panel = MDExpansionPanel(panel_cls=MDExpansionPanelOneLine(text=station), icon="subway",
@@ -84,6 +85,7 @@ class Line(Screen):
             button = MDRaisedButton(text=d, font_style="Button", md_bg_color=[.8, .8, .8, 1],
                                     text_color=[.08, .07, .09, 1],
                                     padding=(20, 20),
+                                    pos_hint={"center_x": 0.5},
                                     on_release=lambda x, direction=directions[d]: self.get_current_direction_modal_view(
                                         direction))
             self.ids.directions.add_widget(button)

@@ -17,24 +17,26 @@
 
         BoxLayout:
             orientation: "vertical"
-            spacing: 20
-            padding: 0, dp(-40), 0, dp(210)
+            spacing: dp(30)
             MDRoundFlatButton:
                 text: "M1-M2"
                 font_style: "H6"
                 text_color: "lightgrey"
-                size_hint: (0.5, 0.2)
                 line_color: [0.8, 0.8, 0.8, 1]
+                padding: dp(20), dp(20)
+                size_hint_x: 0.3
                 pos_hint: {"center_x": 0.5}
                 on_release: app.change_transition_direction("left"); app.root.current = "m1-m2"
             MDRoundFlatButton:
                 text: "M3"
                 font_style: "H6"
-                size_hint: (0.5, 0.2)
                 text_color: "lightgrey"
+                padding: dp(20), dp(20)
+                size_hint_x: 0.3
                 line_color: [0.8, 0.8, 0.8, 1]
                 pos_hint: {"center_x": 0.5}
                 on_release: app.change_transition_direction("left"); app.root.current = "m3"
+            Widget:
 
 
 <DirectionInformation>
@@ -55,17 +57,17 @@
 
 <Content>
     cols: 2
-    size_hint: 0.7, None
+    size_hint: 1, None
     height: self.minimum_height
 
 
     MDList:
-        size_hint: 1, None
+        size_hint: 0.5, None
         height: self.minimum_height
         id: list1
 
     MDList:
-        size_hint: 1, None
+        size_hint: 0.5, None
         height: self.minimum_height
         id: list2
 
@@ -78,17 +80,22 @@
             pos: self.pos
             size: self.size
 
-    FloatLayout:
-        ScrollView:
-            do_scroll_x: False
-            size_hint: (0.43, 0.5)
-            pos_hint: {"center_x": 0.5, "center_y": 0.5}
-            GridLayout:
-                id: directions
-                size_hint: None, None
-                size: root.width, root.height
-                cols: 1
-                spacing: 0, 10
+    BoxLayout:
+        orientation: 'vertical'
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        GridLayout:
+            id: directions
+            size_hint_y: None
+            cols: 1
+            spacing: 0, 10
+            padding: root.width // 2 - dp(150), dp(100)
+
+        Widget:
+
+
+
+
 
     MDIconButton:
         icon: "arrow-left"
