@@ -1,19 +1,18 @@
-from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivymd.app import MDApp
-from line_screen import Line
+from line.line_screen import Line
 
 
 class Home(Screen):
     pass
 
 
+Builder.load_file("kv_files/home.kv")
 class MyApp(MDApp):
 
     def build(self):
         self.title = "SofiaNow"
-        Builder.load_file("my.kv")
         self.screens = [Home(name="home"), Line("M3", name="m3"), Line("M1-M2", name="m1-m2")]
         self.screen_manager = ScreenManager()
         [self.screen_manager.add_widget(s) for s in self.screens]

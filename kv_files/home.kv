@@ -1,0 +1,39 @@
+<Home>
+    canvas:
+        Color:
+            rgba: 21/255, 20/255, 25/255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    GridLayout:
+        rows: 2
+
+        MDLabel:
+            text: "Изберете линия"
+            font_style: "H3"
+            color: "lightgrey"
+            halign: "center"
+
+        BoxLayout:
+            orientation: "vertical"
+            spacing: dp(30)
+            MDRoundFlatButton:
+                text: "M1-M2"
+                font_style: "H6"
+                text_color: "lightgrey"
+                line_color: [0.8, 0.8, 0.8, 1]
+                padding: dp(20), dp(20)
+                size_hint_x: 0.3
+                pos_hint: {"center_x": 0.5}
+                on_release: app.change_transition_direction("left"); app.root.current = "m1-m2"
+            MDRoundFlatButton:
+                text: "M3"
+                font_style: "H6"
+                text_color: "lightgrey"
+                padding: dp(20), dp(20)
+                size_hint_x: 0.3
+                line_color: [0.8, 0.8, 0.8, 1]
+                pos_hint: {"center_x": 0.5}
+                on_release: app.change_transition_direction("left"); app.root.current = "m3"
+            Widget:

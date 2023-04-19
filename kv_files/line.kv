@@ -1,0 +1,27 @@
+<Line>
+    canvas:
+        Color:
+            rgba: 21/255, 20/255, 25/255, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: 'vertical'
+        pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+
+        GridLayout:
+            id: directions
+            size_hint_y: None
+            cols: 1
+            spacing: 0, 10
+            padding: root.width // 2 - dp(150), dp(100)
+
+        Widget:
+
+    MDIconButton:
+        icon: "arrow-left"
+        icon_size: "35sp"
+        theme_text_color: "Custom"
+        text_color: "lightgrey"
+        on_press: app.change_transition_direction("right"); app.root.current = 'home'; root.reset()
