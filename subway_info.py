@@ -71,7 +71,7 @@ def get_stations_with_arrivals(line, direction):
             current_cell_hour = f"Няма курсове за {current_hour}"
             current_cell_arrivals = []
 
-            next_cell_hour = f"Няма курсове за {int(current_hour) + 1}"
+            next_cell_hour = f"Няма курсове за {(int(current_hour) + 1) % 24}"
             next_cell_arrivals = []
 
             if 4 <= int(current_hour) <= 23 or current_hour == "0":

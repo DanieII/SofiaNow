@@ -24,3 +24,4 @@ class Content(GridLayout):
             for arrival in arrivals:
                 item = OneLineListItemAligned(halign="center", text=f"{' ' * (len(arrival) // 2)}{arrival}")
                 current_list.add_widget(item)
+
