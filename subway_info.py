@@ -41,22 +41,13 @@ def get_directions(line):
 def get_stations_with_arrivals(line, direction):
     stations = {}
 
+    # Roughly where the stations are. May not work if new stations are added in the json file
+    # If this happens this block of code should be removed and all stations should be checked with a request(this will be too slow)
     if line == "M1-M2":
-        if direction == "2666" or direction == "2668":
-            line_range = range(77, 147, 2)
-        elif direction == "2667" or direction == "2669":
-            line_range = range(78, 147, 2)
+        current_subway_stations = subway_stations[len(subway_stations) - 100:len(subway_stations) - 30]
 
     elif line == "M3":
-        if direction == "4424":
-            line_range = range(148, 171, 2)
-        elif direction == "4425":
-            line_range = range(147, 171, 2)
-
-    current_subway_stations = []
-    for station in subway_stations:
-        if subway_stations.index(station) in line_range:
-            current_subway_stations.append(station)
+        current_subway_stations = subway_stations[len(subway_stations) - 30:]
 
     session = requests.Session()
     for s in current_subway_stations:
@@ -99,4 +90,5 @@ def get_stations_with_arrivals(line, direction):
                 next_cell_hour: next_cell_arrivals
             }
 
+    session.close()
     return stations
